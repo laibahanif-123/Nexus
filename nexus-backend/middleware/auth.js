@@ -14,7 +14,17 @@ exports.protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.id);
+
+    // Token was valid, but the user it points to no longer exists in the DB
+    // (e.g. stale token from before a DB switch/reset). Without this check,
+    // req.user would be null and any route reading req.user.id would crash
+    // the whole server.
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User nahi mila, dobara login karein' });
+    }
+
+    req.user = user;
     next();
 
   } catch (err) {
@@ -24,10 +34,10 @@ exports.protect = async (req, res, next) => {
 
 exports.authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ 
-        success: false, 
-        message: `Sirf ${roles.join(', ')} access kar sakta hai` 
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Sirf ${roles.join(', ')} access kar sakta hai`
       });
     }
     next();
