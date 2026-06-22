@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'https://nexus-one-rouge.vercel.app'],
   credentials: true
 }));
 app.use(express.json());
@@ -22,6 +22,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/meetings', require('./routes/meetingRoutes'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
