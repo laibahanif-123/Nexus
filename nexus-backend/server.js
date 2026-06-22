@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 const initVideoCallSocket = require('./socket/videoCall');
 
 dotenv.config();
@@ -15,6 +16,10 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+// Serve uploaded documents/signatures as static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 mongoose.connect(process.env.MONGO_URI)
@@ -27,6 +32,8 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/meetings', require('./routes/meetingRoutes'));
+app.use('/api/documents', require('./routes/documentRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
 
 // Create a raw HTTP server so Socket.IO can attach to it
 const server = http.createServer(app);
